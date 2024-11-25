@@ -2360,7 +2360,7 @@ readfile (int nolock)
     {
       fpl = fopen (globalconfig.lockfile, "r");
       if (!fpl) {
-	  debug_write("cannot fopen lockfile");
+	  debug_write("cannot fopen lockfile: %s: %s", globalconfig.lockfile, strerror(errno));
         graceful_exit (106);
       }
       if (fcntl (fileno (fpl), F_SETLKW, &fl) == -1) {
@@ -2371,7 +2371,7 @@ readfile (int nolock)
 
   fp = fopen (globalconfig.passwd, "r");
   if (!fp) {
-      debug_write("cannot fopen passwd file");
+      debug_write("cannot fopen passwd file: %s: %s", globalconfig.passwd, strerror(errno));
     graceful_exit (106);
   }
 
@@ -2563,7 +2563,7 @@ userexist (char *cname, int isnew)
 
     if (ret != SQLITE_OK) {
 	sqlite3_close(db);
-	debug_write("sqlite3_exec failed");
+	debug_write("sqlite3_exec failed: %s", errmsg);
 	graceful_exit(108);
     }
     sqlite3_close(db);
@@ -2664,7 +2664,7 @@ writefile (int requirenew)
   if (!fp)
     {
 	signals_release();
-      debug_write("passwd file fopen failed");
+      debug_write("passwd file fopen failed: %s: %s", globalconfig.passwd, strerror(errno));
       graceful_exit (99);
     }
 
@@ -2742,7 +2742,7 @@ writefile (int requirenew)
 
     if (ret != SQLITE_OK) {
 	sqlite3_close(db);
-	debug_write("writefile sqlite3_exec failed");
+	debug_write("writefile sqlite3_exec failed: %s", errmsg);
 	graceful_exit(98);
     }
     sqlite3_close(db);
@@ -2763,7 +2763,7 @@ purge_stale_locks (int game)
   dir = dgl_format_str(game, me, myconfig[game]->inprogressdir, NULL);
 
   if (!(pdir = opendir (dir))) {
-      debug_write("purge_stale_locks dir open failed");
+      debug_write("purge_stale_locks dir open failed: %s: %s", dir, strerror(errno));
     graceful_exit (200);
   }
 
@@ -2799,7 +2799,7 @@ purge_stale_locks (int game)
       free(inprogdir);
 
       if (!(ipfile = fopen (fn, "r"))) {
-	  debug_write("purge_stale_locks fopen inprogressdir fail");
+	  debug_write("purge_stale_locks fopen inprogressdir fail: %s: %s", fn, strerror(errno));
         graceful_exit (202);
       }
 
