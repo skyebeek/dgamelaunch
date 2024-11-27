@@ -165,6 +165,19 @@ if test "$enable_shmem" = yes; then
 fi
 
 
+AC_ARG_ENABLE(namespaces,
+[AS_HELP_STRING([--enable-namespaces],[Use Linux namespaces.])],
+[enable_namespaces=yes], [])
+
+if test "$enable_namespaces" = yes; then
+   AC_CHECK_HEADERS([sched.h], [], [AC_MSG_ERROR([sched.h not found.])], [])
+   AC_CHECK_HEADERS([sys/capability.h], [], [AC_MSG_ERROR([sys/capability.h not found.])], [])
+   AC_CHECK_LIB(cap, cap_get_proc, [LIBS+=" -lcap"], [AC_MSG_ERROR([Cannot find libcap.])])
+   AC_MSG_RESULT([Enabled Linux namespace support.])
+   AC_DEFINE(USE_NAMESPACES,1,[Use Linux namespaces])
+fi
+
+
 AC_ARG_WITH(config-file,
 [AS_HELP_STRING([--with-config-file=PATH],[Define the path to the default configuration file.])],
 [configfile=$withval], [configfile="/etc/dgamelaunch.conf"])

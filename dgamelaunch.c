@@ -80,6 +80,11 @@
 # include <pty.h>
 #endif
 
+#ifdef USE_NAMESPACES
+# include <sched.h>
+# include <sys/capability.h>
+#endif
+
 #include <fcntl.h>
 #include <pwd.h>
 #include <grp.h>
@@ -2949,6 +2954,32 @@ runmenuloop(struct dg_menu *menu)
     }
 }
 
+#ifdef USE_NAMESPACES
+void
+write_proc_maps(uid_t uid, gid_t gid)
+{
+  FILE *fp;
+
+  fp = fopen("/proc/self/setgroups", "w");
+  if (fp) {
+    fprintf(fp, "deny");
+    fclose(fp);
+  } else perror("fopen setgroups");
+
+  fp = fopen("/proc/self/uid_map", "w");
+  if (fp) {
+    fprintf(fp, "%d %d 1", globalconfig.shed_uid, uid);
+    fclose(fp);
+  } else perror("fopen uid_map");
+
+  fp = fopen("/proc/self/gid_map", "w");
+  if (fp) {
+    fprintf(fp, "%d %d 1", globalconfig.shed_gid, gid);
+    fclose(fp);
+  } else perror("fopen gid_map");
+}
+#endif
+
 int
 main (int argc, char** argv)
 {
@@ -3114,7 +3145,21 @@ main (int argc, char** argv)
 #endif
 #endif
 
+#ifdef USE_NAMESPACES
+  {
+    uid_t uid = geteuid();
+    gid_t gid = getegid();
+    if (unshare(CLONE_NEWUSER | CLONE_NEWNET)) {
+      perror("unshare");
+      graceful_exit(14);
+    }
+    write_proc_maps(uid, gid);
+  }
+#endif
+
+#ifndef USE_NAMESPACES
   if (geteuid () != globalconfig.shed_uid)
+#endif
     {
       /* chroot */
       if (chroot (globalconfig.chroot))
@@ -3134,6 +3179,15 @@ main (int argc, char** argv)
         }
 
       /* shed privs. this is done immediately after chroot. */
+#ifdef USE_NAMESPACES
+      {
+        /* drop all capabilities */
+        cap_t cap = cap_get_proc();
+        cap_clear(cap);
+        cap_set_proc(cap);
+        cap_free(cap);
+      }
+#else
       if (setgroups (1, &globalconfig.shed_gid) == -1)
 	{
 	  perror ("setgroups");
@@ -3151,6 +3205,7 @@ main (int argc, char** argv)
 	  perror ("setuid");
 	  graceful_exit (6);
 	}
+#endif
     }
 
   if (globalconfig.locale) {
