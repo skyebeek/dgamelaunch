@@ -110,7 +110,7 @@ AC_ARG_WITH(sqlite-db,
 if test "$enable_sqlite" = yes; then
    AC_MSG_RESULT([Using SQLite for the database, located at $dgl_sqlite_db])
    AC_DEFINE(USE_SQLITE3,1,[Use SQLite for the database instead of flat text file.])
-   LIBS="$LIBS -lsqlite3"
+   AC_CHECK_LIB(sqlite3, sqlite3_open, [LIBS+=" -lsqlite3"], [AC_MSG_ERROR([Cannot find libsqlite3.])])
    AC_DEFINE_UNQUOTED(USE_SQLITE_DB, "$dgl_sqlite_db", [Path and filename of the SQLite database.])
 fi
 
