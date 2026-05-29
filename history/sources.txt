@@ -1,14 +1,15 @@
 
 
+In order of most-recent commit as of 5/29/2026
 
-noisytoot 	https://codeberg.org/noisytoot/dgamelaunch.git	at 5c4399cc79 (Dec 4, 2024)	fork of NHTangles from commit b691b5f911 (Nov 12, 2024)
+zalethon	https://github.com/zalethon/dgamelaunch.git		(this repository)				fork of noisytoot from commit 5c4399c79 (Dec 4, 2024)
+noisytoot 	https://codeberg.org/noisytoot/dgamelaunch.git	at 5c4399cc79 (Dec 4, 2024)		fork of NHTangles from commit b691b5f911 (Nov 12, 2024)
 NHTangles	https://github.com/NHTangles/dgamelaunch.git	at b691b5f911 (Nov 12, 2024)	fork of altorg from commit d345908 (Aug 19 2017)
-paxed		https://github.com/paxed/dgamelaunch.git	at 55bd7dc (May 11, 2019)	original(?)
-altorg		https://github.com/altorg/dgamelaunch.git	at d345908 (Aug 19, 2017) 	fork of paxed from 16f7183 (Jan 2 2016)
-
+paxed		https://github.com/paxed/dgamelaunch.git		at 55bd7dc (May 11, 2019)		original(?)
+altorg		https://github.com/altorg/dgamelaunch.git		at d345908 (Aug 19, 2017)		fork of paxed from 16f7183 (Jan 2 2016)
 
 
 
 crawl		https://github.com/crawl/dgamelaunch/		at 455308b (... )	fork of paxed from "e43774d" really 445e54f (Feb 25 2010)
-	Crawl is forked as shown, as far as I can tell, but somehow has created an entirely-separate git history with its own commit hashes.
-So automatic reconstruction of full history seems impossible.
+Somehow crawl has= an entirely-separate git history with its own commit hashes.
+So automatic reconstruction of full history seems impossible :(
