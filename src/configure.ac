@@ -8,9 +8,11 @@ AC_CONFIG_SRCDIR([dgamelaunch.c])
 AC_CONFIG_HEADERS([config.h])
 
 AC_PROG_CC(cc gcc)
-AC_STDC_HEADERS
+AC_PROG_LN_S
+AC_PROG_INSTALL
+AC_PROG_LEX(noyywrap)
+AC_PROG_YACC
 
-AC_PROG_LEX
 if test -z "$LEX"; then
    AC_MSG_ERROR([lex or flex not found.])
 fi
@@ -19,7 +21,6 @@ AC_CHECK_LIB(pthread, pthread_create, [PTHREAD_LIBS+=-lpthread])
 
 LIBS="$LIBS $LEXLIB $PTHREAD_LIBS"
 
-AC_CHECK_PROGS(YACC, 'bison -y' byacc yacc)
 if test -z "$YACC"; then
    AC_MSG_ERROR([bison or yacc not found.])
 fi
