@@ -2,9 +2,9 @@ dnl Use autoconf 2.71
 dnl (Things tend to break across versions, they're neither upwards nor
 dnl downward compatible. Blame GNU.)
 
-AC_INIT([dgamelaunch],[1.6.0-hdf])
+AC_INIT([dgamelaunch],[1.6.0-roc])
 AC_PREREQ([2.71])
-
+AC_CONFIG_SRCDIR([dgamelaunch.c])
 AC_CONFIG_HEADERS([config.h])
 
 AC_PROG_CC(cc gcc)
