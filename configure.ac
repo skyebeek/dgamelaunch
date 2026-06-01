@@ -50,7 +50,7 @@ AC_PATH_PROG(MAKEDEPEND, makedepend)
 AC_MSG_CHECKING([how to generate dependency info])
 
 if test "$ac_cv_c_compiler_gnu" = yes; then
-  CFLAGS="$CFLAGS -Wall -Wno-unused $PTHREAD_CFLAGS"
+  CFLAGS="$CFLAGS -Wall -Wno-unused"
   MKDEP="$CC -MM"
   MKDEP_DIRECT="> .depend"
   AC_MSG_RESULT(gcc)
@@ -160,7 +160,7 @@ if test "$enable_shmem" = yes; then
    AC_CHECK_HEADERS([sys/shm.h], [], [AC_MSG_ERROR([sys/shm.h not found.])], [])
    AC_MSG_RESULT([Enabled showing number of watchers.])
    AC_DEFINE(USE_SHMEM,1,[Use shared memory block])
-   LIBS="$LIBS -lrt"
+   MY_LIBS="$MY_LIBS -lrt"
    # or -pthread?
 fi
 
@@ -199,8 +199,10 @@ else
 fi
 
 
+LIBS="$LIBS $MY_LIBS"
 
 AC_SUBST(SETPROCTITLE_C)
+AC_SUBST(LEXLIBS)
 
 AC_CONFIG_FILES(Makefile)
 AC_OUTPUT
