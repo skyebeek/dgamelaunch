@@ -278,6 +278,10 @@ GREPBIN=`standdir $GREPBIN`
 NETHACKBIN=`standdir $NETHACKBIN`
 WORKDIR=`standdir $WORKDIR`
 
+
+DEBUG=0
+if [ -z "$DEBUG" -o "$DEBUG" = "0" ]; then # DEBUG
+
 # We'll fetch, patch, build, and install NetHack,
 # then fetch, patch, and build dgamelaunch, then go through the
 # dgl-create-chroot script.
@@ -472,13 +476,41 @@ if [ -n "$TERMDATA" ]; then
 fi
 
 
+fi # DEBUG
+
 # cleanup
 cd "/$WORKDIR"
-RM_ME="$HACKDIR $PLAYGROUND NetHack-5.0.0 dgamelaunch.zip nethack-500-src.tgz"
+RM_ME="NetHack-5.0.0 dgamelaunch.zip nethack-500-src.tgz dgl-nh500.patch \
+  examples/dgamelaunch.conf configure configure.ac .depend Makefile config.h \
+  config.h.in config.log config.status *.o ee virus lex.yy.c y.tab.c y.tab.h"
 if [ -n $INSTALLDGL ]; then
   RM_ME="$RM_ME dgamelaunch"
 fi
+echo "Removing $RM_ME"
 rm -rf $RM_ME
+mv ./dgl-nh500.patch.bak ./dgl-nh500.patch
+mv ./examples/dgamelaunch.conf.bak ./examples/dgamelaunch.conf
+mv ./configure.ac~ ./configure.ac
+
+HACKDIR=`realpath "/$HACKDIR"`
+PLAYGROUND=`realpath "/$PLAYGROUND"`
+if [ "$HACKDIR" = "/" ]; then
+  cd "$HACKDIR"
+  rm license nethack* nhdat recover symbols sysconf
+else
+  cd `dirname "$HACKDIR"`
+  rm -rf `basename "$HACKDIR"`
+fi
+
+if [ "$PLAYGROUND" = "/" ]; then
+  cd "$PLAYGROUND"
+  rm -rf livelog logfile perm record save/ xlogfile
+else
+  cd `dirname "$PLAYGROUND"`
+  rm -rf `basename "$PLAYGROUND"`
+fi
+
+rm /nethack
 
 echo "Finished."
 
