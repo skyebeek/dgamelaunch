@@ -192,6 +192,7 @@ ERROR CODES
   11	Cannot run as root: Config file has shed_uid = 0
   12	Config file has an unrecognized token
   13	Config file: Negative value not accepted
+  14	Cannot unshare()
   15	dgamelaunch called with -c (login shell command); exited
   20	No menu defined, or no banner found for menu
   60	Cannot create a new terminal, or no termcap files.

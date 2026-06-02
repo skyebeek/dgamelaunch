@@ -66,18 +66,23 @@
 # include <sqlite3.h>
 #endif
 
-#ifndef __FreeBSD__
-# ifdef __APPLE__
-#  include <unistd.h>
-# else
-#  include <crypt.h>
-# endif
-#else
+#if defined(__FreeBSD__)
 # include <libutil.h>
+#elif defined(__NetBSD__)
+# include <util.h>
+#elif defined(__APPLE__)
+# include <unistd.h>
+#else
+# include <crypt.h>
 #endif
 
 #ifdef __linux__
 # include <pty.h>
+#endif
+
+#ifdef USE_NAMESPACES
+# include <sched.h>
+# include <sys/capability.h>
 #endif
 
 #include <fcntl.h>
@@ -980,7 +985,7 @@ get_timediff(time_t ctime, long seconds)
     else if (mins)
 	snprintf(data, 10, "%ldm %lds", mins, secs);
     else if (secs > 4)
-	snprintf(data, 10, "%lds", secs);
+	snprintf(data, 30, "%lds", secs);
     else
 	snprintf(data, 10, " ");
     return data;
@@ -2352,7 +2357,7 @@ readfile (int nolock)
   fl.l_start = 0;
   fl.l_len = 0;
 
-  memset (buf, 1024, 0);
+  memset (buf, 0, 1024);
 
   /* read new stuff */
 
@@ -2360,7 +2365,7 @@ readfile (int nolock)
     {
       fpl = fopen (globalconfig.lockfile, "r");
       if (!fpl) {
-	  debug_write("cannot fopen lockfile");
+	  debug_write("cannot fopen lockfile: %s: %s", globalconfig.lockfile, strerror(errno));
         graceful_exit (106);
       }
       if (fcntl (fileno (fpl), F_SETLKW, &fl) == -1) {
@@ -2371,7 +2376,7 @@ readfile (int nolock)
 
   fp = fopen (globalconfig.passwd, "r");
   if (!fp) {
-      debug_write("cannot fopen passwd file");
+      debug_write("cannot fopen passwd file: %s: %s", globalconfig.passwd, strerror(errno));
     graceful_exit (106);
   }
 
@@ -2563,7 +2568,7 @@ userexist (char *cname, int isnew)
 
     if (ret != SQLITE_OK) {
 	sqlite3_close(db);
-	debug_write("sqlite3_exec failed");
+	debug_write("sqlite3_exec failed: %s", errmsg);
 	graceful_exit(108);
     }
     sqlite3_close(db);
@@ -2664,7 +2669,7 @@ writefile (int requirenew)
   if (!fp)
     {
 	signals_release();
-      debug_write("passwd file fopen failed");
+      debug_write("passwd file fopen failed: %s: %s", globalconfig.passwd, strerror(errno));
       graceful_exit (99);
     }
 
@@ -2742,7 +2747,7 @@ writefile (int requirenew)
 
     if (ret != SQLITE_OK) {
 	sqlite3_close(db);
-	debug_write("writefile sqlite3_exec failed");
+	debug_write("writefile sqlite3_exec failed: %s", errmsg);
 	graceful_exit(98);
     }
     sqlite3_close(db);
@@ -2763,7 +2768,7 @@ purge_stale_locks (int game)
   dir = dgl_format_str(game, me, myconfig[game]->inprogressdir, NULL);
 
   if (!(pdir = opendir (dir))) {
-      debug_write("purge_stale_locks dir open failed");
+      debug_write("purge_stale_locks dir open failed: %s: %s", dir, strerror(errno));
     graceful_exit (200);
   }
 
@@ -2799,7 +2804,7 @@ purge_stale_locks (int game)
       free(inprogdir);
 
       if (!(ipfile = fopen (fn, "r"))) {
-	  debug_write("purge_stale_locks fopen inprogressdir fail");
+	  debug_write("purge_stale_locks fopen inprogressdir fail: %s: %s", fn, strerror(errno));
         graceful_exit (202);
       }
 
@@ -2948,6 +2953,32 @@ runmenuloop(struct dg_menu *menu)
 	}
     }
 }
+
+#ifdef USE_NAMESPACES
+void
+write_proc_maps(uid_t uid, gid_t gid)
+{
+  FILE *fp;
+
+  fp = fopen("/proc/self/setgroups", "w");
+  if (fp) {
+    fprintf(fp, "deny");
+    fclose(fp);
+  } else perror("fopen setgroups");
+
+  fp = fopen("/proc/self/uid_map", "w");
+  if (fp) {
+    fprintf(fp, "%d %d 1", globalconfig.shed_uid, uid);
+    fclose(fp);
+  } else perror("fopen uid_map");
+
+  fp = fopen("/proc/self/gid_map", "w");
+  if (fp) {
+    fprintf(fp, "%d %d 1", globalconfig.shed_gid, gid);
+    fclose(fp);
+  } else perror("fopen gid_map");
+}
+#endif
 
 int
 main (int argc, char** argv)
@@ -3114,7 +3145,21 @@ main (int argc, char** argv)
 #endif
 #endif
 
+#ifdef USE_NAMESPACES
+  {
+    uid_t uid = geteuid();
+    gid_t gid = getegid();
+    if (unshare(CLONE_NEWUSER | CLONE_NEWNET)) {
+      perror("unshare");
+      graceful_exit(14);
+    }
+    write_proc_maps(uid, gid);
+  }
+#endif
+
+#ifndef USE_NAMESPACES
   if (geteuid () != globalconfig.shed_uid)
+#endif
     {
       /* chroot */
       if (chroot (globalconfig.chroot))
@@ -3134,6 +3179,15 @@ main (int argc, char** argv)
         }
 
       /* shed privs. this is done immediately after chroot. */
+#ifdef USE_NAMESPACES
+      {
+        /* drop all capabilities */
+        cap_t cap = cap_get_proc();
+        cap_clear(cap);
+        cap_set_proc(cap);
+        cap_free(cap);
+      }
+#else
       if (setgroups (1, &globalconfig.shed_gid) == -1)
 	{
 	  perror ("setgroups");
@@ -3151,6 +3205,7 @@ main (int argc, char** argv)
 	  perror ("setuid");
 	  graceful_exit (6);
 	}
+#endif
     }
 
   if (globalconfig.locale) {

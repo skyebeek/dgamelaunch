@@ -1,9 +1,9 @@
-dnl Use autoconf 2.53
+dnl Use autoconf 2.71
 dnl (Things tend to break across versions, they're neither upwards nor
 dnl downward compatible. Blame GNU.)
 
 AC_INIT([dgamelaunch],[1.6.0-roc])
-AC_PREREQ([2.72])
+AC_PREREQ([2.71])
 AC_CONFIG_SRCDIR([dgamelaunch.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -28,7 +28,10 @@ fi
 
 case "$(uname -s)" in
   Linux | *BSD)
-    LIBS="$LIBS -lutil -lcrypt"
+    LIBS+=" -lutil"
+    AC_CHECK_LIB(crypt, crypt, [LIBS+=" -lcrypt"], [
+        AC_MSG_ERROR([Cannot find libcrypt.])
+    ])
     AC_DEFINE(NOSTREAMS, 1, [Don't use SVR4 streams support in ttyrec.])
   ;;
 esac
@@ -50,7 +53,7 @@ AC_PATH_PROG(MAKEDEPEND, makedepend)
 AC_MSG_CHECKING([how to generate dependency info])
 
 if test "$ac_cv_c_compiler_gnu" = yes; then
-  CFLAGS="$CFLAGS -Wall -Wno-unused $PTHREAD_CFLAGS"
+  CFLAGS="$CFLAGS -Wall -Wno-unused"
   MKDEP="$CC -MM"
   MKDEP_DIRECT="> .depend"
   AC_MSG_RESULT(gcc)
@@ -90,7 +93,7 @@ AC_SEARCH_LIBS(initscr, [ncursesw cursesw], [], [
 
 
 AC_ARG_ENABLE(debugfile,
-[AC_HELP_STRING([--enable-debugfile], [Enable debugging output to a file.])],
+[AS_HELP_STRING([--enable-debugfile],[Enable debugging output to a file.])],
 [], [])
 
 if test "$enable_debugfile" = yes; then
@@ -100,17 +103,17 @@ fi
 
 
 AC_ARG_ENABLE(sqlite,
-[AC_HELP_STRING([--enable-sqlite], [Use SQLite for the database instead of flat text file.])],
+[AS_HELP_STRING([--enable-sqlite],[Use SQLite for the database instead of flat text file.])],
 [], [])
 
 AC_ARG_WITH(sqlite-db,
-[AC_HELP_STRING([--with-sqlite-db=PATH], [Define the path and filename of the SQLite database.])],
+[AS_HELP_STRING([--with-sqlite-db=PATH],[Define the path and filename of the SQLite database.])],
 [dgl_sqlite_db=$withval; enable_sqlite=yes], [dgl_sqlite_db="/dgldir/dgamelaunch.db"])
 
 if test "$enable_sqlite" = yes; then
    AC_MSG_RESULT([Using SQLite for the database, located at $dgl_sqlite_db])
    AC_DEFINE(USE_SQLITE3,1,[Use SQLite for the database instead of flat text file.])
-   LIBS="$LIBS -lsqlite3"
+   AC_CHECK_LIB(sqlite3, sqlite3_open, [LIBS+=" -lsqlite3"], [AC_MSG_ERROR([Cannot find libsqlite3.])])
    AC_DEFINE_UNQUOTED(USE_SQLITE_DB, "$dgl_sqlite_db", [Path and filename of the SQLite database.])
 fi
 
@@ -119,7 +122,7 @@ fi
 
 dgl_rlimit_core_default=157286400
 AC_ARG_WITH(rlimit-core,
-[AC_HELP_STRING([--with-rlimit-core=SIZE], [Enable and set the core dump maximum size.])],
+[AS_HELP_STRING([--with-rlimit-core=SIZE],[Enable and set the core dump maximum size.])],
 [dgl_rlimit_core=$withval; enable_rlimit=yes], [dgl_rlimit_core=$dgl_rlimit_core_default])
 
 if test "$enable_rlimit" = yes; then
@@ -135,7 +138,7 @@ fi
 
 dgl_rlimit_as_default=104857600
 AC_ARG_WITH(rlimit-as,
-[AC_HELP_STRING([--with-rlimit-as=SIZE], [Enable and set the maximum memory usage.])],
+[AS_HELP_STRING([--with-rlimit-as=SIZE],[Enable and set the maximum memory usage.])],
 [dgl_rlimit_as=$withval; enable_rlimit=yes], [dgl_rlimit_as=$dgl_rlimit_as_default])
 
 if test "$enable_rlimit" = yes; then
@@ -151,7 +154,7 @@ fi
 
 
 AC_ARG_ENABLE(shmem,
-[AC_HELP_STRING([--enable-shmem], [Use a shared memory block to show number of watchers.])],
+[AS_HELP_STRING([--enable-shmem],[Use a shared memory block to show number of watchers.])],
 [enable_shmem=yes], [])
 
 if test "$enable_shmem" = yes; then
@@ -160,13 +163,26 @@ if test "$enable_shmem" = yes; then
    AC_CHECK_HEADERS([sys/shm.h], [], [AC_MSG_ERROR([sys/shm.h not found.])], [])
    AC_MSG_RESULT([Enabled showing number of watchers.])
    AC_DEFINE(USE_SHMEM,1,[Use shared memory block])
-   LIBS="$LIBS -lrt"
+   MY_LIBS="$MY_LIBS -lrt"
    # or -pthread?
 fi
 
 
+AC_ARG_ENABLE(namespaces,
+[AS_HELP_STRING([--enable-namespaces],[Use Linux namespaces.])],
+[enable_namespaces=yes], [])
+
+if test "$enable_namespaces" = yes; then
+   AC_CHECK_HEADERS([sched.h], [], [AC_MSG_ERROR([sched.h not found.])], [])
+   AC_CHECK_HEADERS([sys/capability.h], [], [AC_MSG_ERROR([sys/capability.h not found.])], [])
+   AC_CHECK_LIB(cap, cap_get_proc, [LIBS+=" -lcap"], [AC_MSG_ERROR([Cannot find libcap.])])
+   AC_MSG_RESULT([Enabled Linux namespace support.])
+   AC_DEFINE(USE_NAMESPACES,1,[Use Linux namespaces])
+fi
+
+
 AC_ARG_WITH(config-file,
-[AC_HELP_STRING([--with-config-file=PATH], [Define the path to the default configuration file.])],
+[AS_HELP_STRING([--with-config-file=PATH],[Define the path to the default configuration file.])],
 [configfile=$withval], [configfile="/etc/dgamelaunch.conf"])
 
 AC_DEFINE_UNQUOTED(DEFCONFIG, "$configfile", [Path to the default config file.])
@@ -186,8 +202,10 @@ else
 fi
 
 
+LIBS="$LIBS $MY_LIBS"
 
 AC_SUBST(SETPROCTITLE_C)
+AC_SUBST(LEXLIBS)
 
 AC_CONFIG_FILES(Makefile)
 AC_OUTPUT

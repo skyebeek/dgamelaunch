@@ -65,6 +65,8 @@ wchar_t *ee_long_notice[] = {
 
 wchar_t *version = L"@(#) ee, version 1.4.1  $Revision: 1.10 $";
 
+#define _XOPEN_SOURCE 700
+
 #include <locale.h>
 #include <curses.h>
 #include <signal.h>

@@ -692,14 +692,17 @@ sort_games (struct dg_game **games, int len, dg_sortmode sortmode)
 
 #ifdef USE_DEBUGFILE
 void
-debug_write(char *str)
+debug_write(char *fmt, ...)
 {
+    va_list args;
     FILE *fp;
     fp = fopen("/dgldebug.log", "a");
     if (!fp) return;
-    fprintf(fp, "%s\n", str);
+    va_start(args, fmt);
+    vfprintf(fp, fmt, args);
+    va_end(args);
+    fputc('\n', fp);
     fclose(fp);
-
 }
 #endif /* USE_DEBUGFILE */
 

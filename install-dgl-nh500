@@ -91,7 +91,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --etc)
       DGLETC="/${2#/}"
-      DGLETC="${CDGLETC%/}"
+      DGLETC="${DGLETC%/}"
       shift
       shift
       ;;
@@ -137,13 +137,10 @@ while [[ $# -gt 0 ]]; do
       set --
       break
       ;;
-    -*|--*)
+    -*|--*|*)
       echo "Unknown option $1"
-      echo "Valid options are: --install-nh500, --nano, --quiet|--silent, --prefix <dir>, --var <dir>, --etc <dir>, --menudir <dir>, --hackdir <dir>, --playground <dir>"
+      echo "Try $0 --help"
       exit 1
-      ;;
-    *)
-      break # (treat this as $1)
       ;;
   esac
 done
@@ -217,7 +214,8 @@ COMPRESSBIN="/bin/gzip"
 GREPBIN="/bin/grep"
 
 # DON'T CHANGE THESE
-WORKDIR="`pwd`"
+WORKDIR="dirname `realpath $0`"
+WORKDIR=`$WORKDIR`
 NETHACKBIN="$HACKDIR/nethack"
 
 
@@ -280,6 +278,10 @@ GREPBIN=`standdir $GREPBIN`
 NETHACKBIN=`standdir $NETHACKBIN`
 WORKDIR=`standdir $WORKDIR`
 
+
+DEBUG=0
+if [ -z "$DEBUG" -o "$DEBUG" = "0" ]; then # DEBUG
+
 # We'll fetch, patch, build, and install NetHack,
 # then fetch, patch, and build dgamelaunch, then go through the
 # dgl-create-chroot script.
@@ -305,7 +307,7 @@ sed -i -e "s,(:playground:),"/$PLAYGROUND",g" $PATCH_ME
 ###############
 # Fetch, patch, build, install NetHack
 if [ -n "$FETCHNH" ]; then
-  wget ${NETHACK500}
+  wget ${NETHACK500} -O ./nethack-500-src.tgz
   expectsum=${NETHACKSHA256}
   actualsum=`shasum -a256 ./nethack-500-src.tgz | awk '{ print $1 }'`
   if [ $actualsum != $expectsum ]; then
@@ -381,12 +383,11 @@ mkdir -p "/$CHROOT" || errorexit "Cannot create chroot."
 cd "/$CHROOT"
 
 mkdir -p "$MENUDIR" "$DGLVAR" etc var opt lib mail usr bin dev
-mkdir -p "$DGLVAR/inprogress-nh500"
+mkdir -p "$DGLVAR/inprogress-nh500curses"
+mkdir -p "$DGLVAR/inprogress-nh500tty"
 mkdir -p "$DGLVAR/userdata"
 
-chown "$USRGRP" "$DGLVAR" mail
-chown "$USRGRP" "./$DGLVAR/inprogress-nh500"
-chown "$USRGRP" "./$DGLVAR/userdata"
+chown -R "$USRGRP" "$DGLVAR" mail
 
 # Create randomness device
 cd dev
@@ -474,13 +475,41 @@ if [ -n "$TERMDATA" ]; then
 fi
 
 
+fi # DEBUG
+
 # cleanup
 cd "/$WORKDIR"
-RM_ME="$HACKDIR $PLAYGROUND NetHack-5.0.0 dgamelaunch.zip nethack-500-src.tgz"
+RM_ME="NetHack-5.0.0 dgamelaunch.zip nethack-500-src.tgz dgl-nh500.patch \
+  examples/dgamelaunch.conf configure configure.ac .depend Makefile config.h \
+  config.h.in config.log config.status *.o ee virus lex.yy.c y.tab.c y.tab.h"
 if [ -n $INSTALLDGL ]; then
   RM_ME="$RM_ME dgamelaunch"
 fi
+echo "Removing $RM_ME"
 rm -rf $RM_ME
+mv ./dgl-nh500.patch.bak ./dgl-nh500.patch
+mv ./examples/dgamelaunch.conf.bak ./examples/dgamelaunch.conf
+mv ./configure.ac~ ./configure.ac
+
+HACKDIR=`realpath "/$HACKDIR"`
+PLAYGROUND=`realpath "/$PLAYGROUND"`
+if [ "$HACKDIR" = "/" ]; then
+  cd "$HACKDIR"
+  rm license nethack* nhdat recover symbols sysconf
+else
+  cd `dirname "$HACKDIR"`
+  rm -rf `basename "$HACKDIR"`
+fi
+
+if [ "$PLAYGROUND" = "/" ]; then
+  cd "$PLAYGROUND"
+  rm -rf livelog logfile perm record save/ xlogfile
+else
+  cd `dirname "$PLAYGROUND"`
+  rm -rf `basename "$PLAYGROUND"`
+fi
+
+rm /nethack
 
 echo "Finished."
 

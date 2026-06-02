@@ -323,9 +323,9 @@ extern void free_populated_games(struct dg_game **games, int len);
 extern struct dg_game **populate_games(int game, int *l, struct dg_user *me);
 
 #ifdef USE_DEBUGFILE
-extern void debug_write(char *str);
+extern void debug_write(char *str, ...);
 #else
-#define debug_write(str)
+#define debug_write(...)
 #endif
 
 extern struct dg_game **sort_games(struct dg_game **games, int len, dg_sortmode sortmode);
