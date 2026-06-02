@@ -157,7 +157,7 @@ Congrats on your new server...
 
 
 # Hints
-# # Dungeon Crawl Stone Soup
+## Dungeon Crawl Stone Soup
 1) obtain the source, navigate to that directory
 2) `sudo make install prefix=/ DATADIR=/etc/dcss0341 SAVEDIR=/var/dcss0341 USE_DGAMELAUNCH=1`
 Note: 2) instead of setting USE_DGAMELAUNCH, you can also edi
@@ -179,9 +179,13 @@ sudo chown -R games:games /opt/dgamelaunch/var
 ```
 8) Modify the main menu (it might help to `dcss-menu.patch` to it)
 
-# # Angband
+## Angband
+KNOWN ISSUE: With ssh on powershell, dgamelaunch causes angband to display missing characters sometimes
+if you launch dgamelaunch from inside tmux, it works in there. Clue: watched games only get the missing
+chars if they are missing on the screen of the person playing the game.
+
 1) obtain source, navigate to the directory
-2) `./configure --prefix=/. --bindir=/bin --datarootdir=/var --with-gamedata-in-lib
+2) `./configure --prefix=/. --bindir=/bin --datarootdir=/var --with-gamedata-in-lib`
 3) make DESTDIR=/opt/dgamelaunch install
 4) Try out cpbin, with --libs-only, to see if you can just automagically transfer libraries
 4a) otherwise do it by hand, check out the `ldd` command and other parts of this readme for more.
