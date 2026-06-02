@@ -156,8 +156,8 @@ will not see a shell when it exits.
 Congrats on your new server...
 
 
-# Dungeon Crawl Stone Soup
-First, though, here's how to install Dungeon Crawl Stone Soup:
+# Hints
+# # Dungeon Crawl Stone Soup
 1) obtain the source, navigate to that directory
 2) `sudo make install prefix=/ DATADIR=/etc/dcss0341 SAVEDIR=/var/dcss0341 USE_DGAMELAUNCH=1`
 Note: 2) instead of setting USE_DGAMELAUNCH, you can also edi
@@ -179,7 +179,13 @@ sudo chown -R games:games /opt/dgamelaunch/var
 ```
 8) Modify the main menu (it might help to `dcss-menu.patch` to it)
 
-That's it!
+# # Angband
+1) obtain source, navigate to the directory
+2) `./configure --prefix=/. --bindir=/bin --datarootdir=/var --with-gamedata-in-lib
+3) make DESTDIR=/opt/dgamelaunch install
+4) Try out cpbin, with --libs-only, to see if you can just automagically transfer libraries
+4a) otherwise do it by hand, check out the `ldd` command and other parts of this readme for more.
+5) Uncomment relevant lines in dgamelaunch.conf, and make/chown the inprogress dir
 
 # Resources
 More resources for troubleshooting vis NetHack:
