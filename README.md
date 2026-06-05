@@ -180,16 +180,17 @@ sudo chown -R games:games /opt/dgamelaunch/var
 8) Modify the main menu (it might help to `dcss-menu.patch` to it)
 
 ## Angband
-KNOWN ISSUE: With ssh on powershell, dgamelaunch causes angband to display missing characters sometimes
-if you launch dgamelaunch from inside tmux, it works in there. Clue: watched games only get the missing
-chars if they are missing on the screen of the person playing the game.
+You should probably add more config options like `--disable-borg`, and might want to go through the source to disable debug and wizard commands.
 
 1) obtain source, navigate to the directory
 2) `./configure --prefix=/. --bindir=/bin --datarootdir=/var --with-gamedata-in-lib`
 3) make DESTDIR=/opt/dgamelaunch install
 4) Try out cpbin, with --libs-only, to see if you can just automagically transfer libraries
-4a) otherwise do it by hand, check out the `ldd` command and other parts of this readme for more.
-5) Uncomment relevant lines in dgamelaunch.conf, and make/chown the inprogress dir
+4) otherwise do it by hand, check out the `ldd` command and other parts of this readme for more.
+5) `mkdir -p <dgamelaunch chroot>/usr/lib/locale`
+5) `cd <dgamelaunch chroot>/usr/lib/locale`
+5) `cp /usr/lib/locale/locale-archive .`
+6) Uncomment relevant lines in dgamelaunch.conf, and make/chown the inprogress dir
 
 # Resources
 More resources for troubleshooting vis NetHack:
