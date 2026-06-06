@@ -609,7 +609,7 @@ loadbanner (char *fname, struct dg_banner *ban) {
       char *fn_end = strchr(fn, ')');
       if (fn_end) {
         *fn_end = '\0';
-        if (strcmp(fname, fn)) {
+        if (strcmp(fname, fn)) { // Don't load THIS file
           loadbanner(fn, ban);
         }
       }
