@@ -596,6 +596,7 @@ loadbanner (char *fname, struct dg_banner *ban) {
   while (fgets (buf, DGL_BANNER_LINELEN, bannerfile) != NULL) {
     char bufnew[DGL_BANNER_LINELEN+1];
     int slen;
+    char *inclpos;
 
     memset (bufnew, 0, DGL_BANNER_LINELEN);
 
@@ -604,8 +605,8 @@ loadbanner (char *fname, struct dg_banner *ban) {
       buf[slen-1] = '\0';
 
     strncpy(bufnew, buf, DGL_BANNER_LINELEN);
-    if (strstr(bufnew, "$INCLUDE(")) {
-      char *fn = bufnew + 9;
+    if ( inclpos = strstr(bufnew, "$INCLUDE(") ) {
+      char *fn = inclpos + 9;
       char *fn_end = strchr(fn, ')');
       if (fn_end) {
         *fn_end = '\0';
