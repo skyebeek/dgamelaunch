@@ -1,11 +1,15 @@
 1.6.1-roc (2026)
-        * Forked noisytoot repository and merged changes in paxed's repo since
-	  last merge.
-        * Changed loadbanner() [dgamelaunch.c] -- $INCLUDE() can now be anywhere
-          in a line.
-        * Banner files can be longer than 24 lines, if the window size is long
-          enough.
-        * Self-reported vrsion now includes git commit for untagged versions.
+        * Banner (Menu) Files
+          * Changed loadbanner() [dgamelaunch.c] -- $INCLUDE() can now be
+            anywhere in a line.
+          * Banner files can be longer than 24 lines, if the window size is
+            long enough.
+        * Meta
+          * Self-reported version now includes git tag and/or commit hash.
+          * Forked noisytoot repository and merged changes in paxed's repo
+            since last merge.
+
+
         * Merged "crawl-specific" character handling from crawl repo (maybe it
           will be useful for older versions of DCSS?)
 
