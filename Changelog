@@ -1,17 +1,24 @@
 1.6.1-roc (2026)
-        * Banner (Menu) Files
-          * Changed loadbanner() [dgamelaunch.c] -- $INCLUDE() can now be
-            anywhere in a line.
-          * Banner files can be longer than 24 lines, if the window size is
-            long enough.
-        * Meta
-          * Self-reported version now includes git tag and/or commit hash.
-          * Forked noisytoot repository and merged changes in paxed's repo
-            since last merge.
+	* Banner (Menu) Files
+	  * Changed loadbanner() [dgamelaunch.c] -- $INCLUDE() can now be
+	    anywhere in a line.
+	  * $VERSION now replaced with PACKAGE_VERSION instead of
+	    PACKAGE_STRING
+	  * Banner files can be longer than 24 lines, if the window size is
+	    long enough.
+	* Meta
+	  * Self-reported version now includes git tag and/or commit hash.
+	  * Forked noisytoot repository and merged changes in paxed's repo
+	    since last merge.
 
 
         * Merged "crawl-specific" character handling from crawl repo (maybe it
           will be useful for older versions of DCSS?)
+
+1.6.0-hdf (2024 - noisytoot fork, recorded here 2026 by skyebee)
+	* Fixed various buildtime warnings in ee, and minor errors in autoconf
+	* Improved error reporting in dgldebug.log
+	* Added optional support for linux namespaces over root powers
 
 1.6.0-hdf (2018-2020)
 	* Enhanced watchmode - use game's built-in whatch function instead of
