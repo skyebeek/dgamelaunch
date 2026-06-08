@@ -2,6 +2,8 @@
         * Banner (Menu) Files
           * Changed loadbanner() [dgamelaunch.c] -- $INCLUDE() can now be
             anywhere in a line.
+          * $VERSION now replaced with PACKAGE_VERSION instead of
+            PACKAGE_STRING
           * Banner files can be longer than 24 lines, if the window size is
             long enough.
         * Meta

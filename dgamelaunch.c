@@ -621,7 +621,7 @@ loadbanner (char *fname, struct dg_banner *ban) {
         strncpy(bufnew, bannerstrmangle(bufnew, tmpbufnew, DGL_BANNER_LINELEN, bv->name, banner_var_resolve(bv)), DGL_BANNER_LINELEN);
         bv = bv->next;
       }
-      strncpy(bufnew, bannerstrmangle(bufnew, tmpbufnew, DGL_BANNER_LINELEN, "$VERSION", PACKAGE_STRING), DGL_BANNER_LINELEN);
+      strncpy(bufnew, bannerstrmangle(bufnew, tmpbufnew, DGL_BANNER_LINELEN, "$VERSION", PACKAGE_VERSION), DGL_BANNER_LINELEN);
       if (me && loggedin) {
         strncpy(bufnew, bannerstrmangle(bufnew, tmpbufnew, DGL_BANNER_LINELEN, "$USERNAME", me->username), DGL_BANNER_LINELEN);
       } else {
