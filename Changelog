@@ -5,6 +5,7 @@
 	  in a line.
         * Banner files can be longer than 24 lines, if the window size is long
           enough.
+        * Self-reported vrsion now includes git commit for untagged versions.
 
 1.6.0-hdf (2018-2020)
 	* Enhanced watchmode - use game's built-in whatch function instead of
