@@ -135,25 +135,6 @@ static struct dg_watchcols default_watchcols[] = {
 #endif
 };
 
-int color_remap[16] = {
-    COLOR_PAIR(9) | A_NORMAL,
-    COLOR_PAIR(COLOR_BLUE) | A_NORMAL,
-    COLOR_PAIR(COLOR_GREEN) | A_NORMAL,
-    COLOR_PAIR(COLOR_CYAN) | A_NORMAL,
-    COLOR_PAIR(COLOR_RED) | A_NORMAL,
-    COLOR_PAIR(COLOR_MAGENTA) | A_NORMAL,
-    COLOR_PAIR(COLOR_YELLOW) | A_NORMAL,
-    COLOR_PAIR(COLOR_BLACK) | A_NORMAL,
-    COLOR_PAIR(10) | A_BOLD,
-    COLOR_PAIR(COLOR_BLUE) | A_BOLD,
-    COLOR_PAIR(COLOR_GREEN) | A_BOLD,
-    COLOR_PAIR(COLOR_CYAN) | A_BOLD,
-    COLOR_PAIR(COLOR_RED) | A_BOLD,
-    COLOR_PAIR(COLOR_MAGENTA) | A_BOLD,
-    COLOR_PAIR(COLOR_YELLOW) | A_BOLD,
-    COLOR_PAIR(COLOR_WHITE) | A_BOLD,
-};
-
 static struct dg_watchcols *default_watchcols_list[DGL_MAXWATCHCOLS + 1];
 
 struct dg_user *
@@ -640,6 +621,48 @@ loadbanner (char *fname, struct dg_banner *ban) {
   fclose (bannerfile);
 }
 
+int remap_attr_string(char *s)
+{
+  int attr = 0;
+  if (s && *s)
+  {
+    switch (*s)
+    {
+    default:
+      break;
+    case '0': case '1': case '2': case '3': case '4':
+    case '5': case '6': case '7': case '8': case '9':
+    {
+      int num = atoi(s);
+      if (num >= 0 && num <= 129)
+        attr |= COLOR_PAIR(num+1);
+    }
+    break;
+    case 'b':
+      attr |= A_BOLD;
+      break;
+    case 's':
+      attr |= A_STANDOUT;
+      break;
+    case 'u':
+      attr |= A_UNDERLINE;
+      break;
+    case 'r':
+      attr |= A_REVERSE;
+      break;
+    case 'd':
+      attr |= A_DIM;
+      break;
+    case 'f':
+      attr |= A_BLINK;
+      break;
+    }
+  }
+  else
+    attr = A_NORMAL;
+  return attr;
+}
+
 void drawbanner(struct dg_banner *ban)
 {
   unsigned int i;
@@ -681,50 +704,7 @@ void drawbanner(struct dg_banner *ban)
               *next_attr_char = '\0';
               next_attr_char++;
             }
-            if (edit_cursor && *edit_cursor)
-            {
-              switch (*edit_cursor)
-              {
-              default:
-                break;
-              case '0':
-              case '1':
-              case '2':
-              case '3':
-              case '4':
-              case '5':
-              case '6':
-              case '7':
-              case '8':
-              case '9':
-              {
-                int num = atoi(edit_cursor);
-                if (num >= 0 && num <= 15)
-                  attr |= color_remap[num];
-              }
-              break;
-              case 'b':
-                attr |= A_BOLD;
-                break;
-              case 's':
-                attr |= A_STANDOUT;
-                break;
-              case 'u':
-                attr |= A_UNDERLINE;
-                break;
-              case 'r':
-                attr |= A_REVERSE;
-                break;
-              case 'd':
-                attr |= A_DIM;
-                break;
-              case 'f':
-                attr |= A_BLINK;
-                break;
-              }
-            }
-            else
-              attr = A_NORMAL;
+            attr |= remap_attr_string(edit_cursor);
             edit_cursor = next_attr_char;
           } while (delimited);
 
@@ -742,6 +722,12 @@ void drawbanner(struct dg_banner *ban)
       }
       else
         mvaddstr(1 + i, x, output_cursor);
+//      elif ((edit_cursor = strstr(output_cursor, "$ATT2(")))
+//      {
+//        if ((special_end = strstr(edit_cursor, ")")))
+//        {
+//        }
+//      }
     } while (line_incomplete);
     free(banner_line);
   }
@@ -1906,6 +1892,7 @@ freefile ()
 void
 initcurses ()
 {
+  int i, j;
   printf("\033[2J");
   if (newterm(NULL, stdout, stdin) == NULL) {
       if (!globalconfig.defterm || (newterm(globalconfig.defterm, stdout, stdin) == NULL)) {
@@ -1923,22 +1910,28 @@ initcurses ()
   start_color();
   use_default_colors();
 
-  init_pair(COLOR_BLACK, COLOR_WHITE, COLOR_BLACK);
-  init_pair(COLOR_RED, COLOR_RED, COLOR_BLACK);
-  init_pair(COLOR_GREEN, COLOR_GREEN, COLOR_BLACK);
-  init_pair(COLOR_YELLOW, COLOR_YELLOW, COLOR_BLACK);
-  init_pair(COLOR_BLUE, COLOR_BLUE, COLOR_BLACK);
-  init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
-  init_pair(COLOR_CYAN, COLOR_CYAN, COLOR_BLACK);
-  init_pair(COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
-  init_pair(9, 0, COLOR_BLACK);
-  init_pair(10, COLOR_BLACK, COLOR_BLACK);
-  init_pair(11, -1, -1);
-
+  init_pair(0, COLOR_WHITE, COLOR_BLACK);
+  init_pair(129, -1, -1);
+  /* color_pair_idx(0, 0) = 1; color_pair_idx(15, 7) = 128*/
+  for (i = 0; i <= 15; i++)
+  {
+    for (j = 0; j <= 7; j++)
+    {
+      init_pair(color_pair_idx(i, j), i, j);
+    }
+  }
   if (globalconfig.utf8esc) (void) write(1, "\033%G", 3);
 #endif
   clear();
   refresh();
+}
+
+int color_pair_idx(int fg, int bg)
+{
+  int bgbits = (7 & bg) << 4;
+  /* Swap bits 1 and 3 to line up with original color remap (+1) */
+  int fgbits = (8 & fg) | ((1 & fg) << 2) | (2 & fg) | ((4 & fg) >> 2);
+  return (bgbits | fgbits) + 1;
 }
 
 /* ************************************************************* */
