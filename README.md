@@ -1,13 +1,15 @@
-The main feature of the master branch of this fork is install-dgl-nh500, which does what it says on the tin.
-It will fetch, compile, and install nethack 5.0.0, and do the same for DGL (although it is already fetched
-by the time you're using the script), and put them into a chroot of your choosing.
+The main feature of the master branch of this fork is install-dgl-nh500, which
+does what it says on the tin. It will fetch, compile, and install
+nethack 5.0.0, and do the same for DGL (although it is already fetched by the
+time you're using the script), and put them into a chroot of your choosing.
 
-autoconf branch is for making dgl's configure/makefile stuff work, without having to use these bash scripts
-people have written over the years.
+autoconf branch is for making dgl's configure/makefile stuff work, without
+having to use these bash scripts people have written over the years.
 
-I'm pretty interested in the history of this program -- so much so that I went through pains trying to make
-sure I was forking a version of the repository that contained accurate commit hashes -- crawl's fork has
-somehow mangled them such that its history appears entirely-unrelated to git.
+I'm pretty interested in the history of this program -- so much so that I went
+through pains trying to make sure I was forking a version of the repository
+that contained accurate commit hashes -- crawl's fork has somehow mangled them
+such that its history appears entirely-unrelated to git.
 
 Anyway, if you know anything of the history, reach out.
 
@@ -156,13 +158,14 @@ will not see a shell when it exits.
 Congrats on your new server...
 
 
-# Dungeon Crawl Stone Soup
-First, though, here's how to install Dungeon Crawl Stone Soup:
+# Hints
+## Dungeon Crawl Stone Soup
 1) obtain the source, navigate to that directory
-2) `sudo make install prefix=/ DATADIR=/etc/dcss0341 SAVEDIR=/var/dcss0341 USE_DGAMELAUNCH=1`
-Note: 2) instead of setting USE_DGAMELAUNCH, you can also edi
-`<src>/crawl-ref/source/AppHdr.h`, and `#define DGAMELAUNCH=1` there. (and tweak
-    other settings which interest you)
+2) ...
+```bash
+sudo make install prefix=/ DATADIR=/etc/dcss0341 \
+SAVEDIR=/var/dcss0341 USE_DGAMELAUNCH=1
+```
 3) navigate to the directory with these scripts (dgamelaunch source dir)
 4) ...
 ```bash
@@ -170,7 +173,8 @@ Note: 2) instead of setting USE_DGAMELAUNCH, you can also edi
 sudo cp /etc/dcss0341 /opt/dgamelaunch/etc/
 sudo cp /var/dcss0341 /opt/dgamelaunch/var/
 ```
-5) (clean up in `/bin/crawl`, `/etc/dcss0341`, `/var/dcss0341` if you want to; don't need those files anymore)
+5) (clean up in `/bin/crawl`, `/etc/dcss0341`, `/var/dcss0341` if you want to;
+don't need those files anymore)
 6) Modify `dgamelaunch.conf` to uncomment relevant lines
 7) ...
 ```bash
@@ -179,7 +183,19 @@ sudo chown -R games:games /opt/dgamelaunch/var
 ```
 8) Modify the main menu (it might help to `dcss-menu.patch` to it)
 
-That's it!
+## Angband
+1) obtain source, navigate to the directory
+2) ...
+```bash
+./configure --prefix=/. --bindir=/bin --datarootdir=/var --with-gamedata-in-lib
+```
+3) `make DESTDIR=/opt/dgamelaunch install`
+4) Try out `cpbin`, with `--libs-only`, to see if you can just automagically
+transfer libraries
+4a) otherwise do it by hand, check out the `ldd` command and other parts of
+this readme for more.
+5) Uncomment relevant lines in dgamelaunch.conf, and make/chown the inprogress
+dir
 
 # Resources
 More resources for troubleshooting vis NetHack:
