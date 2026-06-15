@@ -66,14 +66,14 @@
 # include <sqlite3.h>
 #endif
 
-#ifndef __FreeBSD__
-# ifdef __APPLE__
-#  include <unistd.h>
-# else
-#  include <crypt.h>
-# endif
-#else
+#if defined(__FreeBSD__)
 # include <libutil.h>
+#elif defined(__NetBSD__)
+# include <util.h>
+#elif defined(__APPLE__)
+# include <unistd.h>
+#else
+# include <crypt.h>
 #endif
 
 #ifdef __linux__
@@ -980,7 +980,7 @@ get_timediff(time_t ctime, long seconds)
     else if (mins)
 	snprintf(data, 10, "%ldm %lds", mins, secs);
     else if (secs > 4)
-	snprintf(data, 10, "%lds", secs);
+	snprintf(data, 30, "%lds", secs);
     else
 	snprintf(data, 10, " ");
     return data;
@@ -2352,7 +2352,7 @@ readfile (int nolock)
   fl.l_start = 0;
   fl.l_len = 0;
 
-  memset (buf, 1024, 0);
+  memset (buf, 0, 1024);
 
   /* read new stuff */
 
