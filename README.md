@@ -1,9 +1,16 @@
-The main feature of the master branch of this fork is install-dgl-nh500, which does what it says on the tin.
-It will fetch, compile, and install nethack 5.0.0, and do the same for DGL (although it is already fetched
-by the time you're using the script), and put them into a chroot of your choosing.
+This fork is a branch of version 1.6.0-hdf; this fork is currently in version 1.6.1-roc.
 
-autoconf branch is for making dgl's configure/makefile stuff work, without having to use these bash scripts
-people have written over the years.
+Several forks have been merged in; some features prior to my own modifications:
+* noisytoot's linux namespace support
+* crawl's character-stripping for watchers with extremely-outdated hardware
+* paxed's handful of changes (mostly fixing warnings)
+
+Here are some other features of this fork:
+* install-dgl-nh500 script, replacement for dgl-create-chroot
+* rubber-ducky branch, which has currently a single function drawbanner()
+  explained line-by-line -- planning to do this for more of the codebase,
+  as the personal need arises.
+* Some upgrades to menu/bannerfile handling -- see Changelog
 
 I'm pretty interested in the history of this program -- so much so that I went through pains trying to make
 sure I was forking a version of the repository that contained accurate commit hashes -- crawl's fork has
@@ -156,8 +163,8 @@ will not see a shell when it exits.
 Congrats on your new server...
 
 
-# Dungeon Crawl Stone Soup
-First, though, here's how to install Dungeon Crawl Stone Soup:
+# Hints
+## Dungeon Crawl Stone Soup
 1) obtain the source, navigate to that directory
 2) `sudo make install prefix=/ DATADIR=/etc/dcss0341 SAVEDIR=/var/dcss0341 USE_DGAMELAUNCH=1`
 Note: 2) instead of setting USE_DGAMELAUNCH, you can also edi
@@ -179,7 +186,18 @@ sudo chown -R games:games /opt/dgamelaunch/var
 ```
 8) Modify the main menu (it might help to `dcss-menu.patch` to it)
 
-That's it!
+## Angband
+You should probably add more config options like `--disable-borg`, and might want to go through the source to disable debug and wizard commands.
+
+1) obtain source, navigate to the directory
+2) `./configure --prefix=/. --bindir=/bin --datarootdir=/var --with-gamedata-in-lib`
+3) make DESTDIR=/opt/dgamelaunch install
+4) Try out cpbin, with --libs-only, to see if you can just automagically transfer libraries
+4) otherwise do it by hand, check out the `ldd` command and other parts of this readme for more.
+5) `mkdir -p <dgamelaunch chroot>/usr/lib/locale`
+5) `cd <dgamelaunch chroot>/usr/lib/locale`
+5) `cp /usr/lib/locale/locale-archive .`
+6) Uncomment relevant lines in dgamelaunch.conf, and make/chown the inprogress dir
 
 # Resources
 More resources for troubleshooting vis NetHack:
