@@ -17,3 +17,7 @@
 /ee
 /*.swp
 /autom4te.cache
+/config.h.in~
+/configure~
+/install-sh~
+/install-sh
