@@ -1928,7 +1928,7 @@ initcurses ()
 
 int color_pair_idx(int fg, int bg)
 {
-  int bgbits = (7 & bg) << 4;
+  int bgbits = (((1 & bg) << 2) | (2 & bg) | ((4 & bg) >> 2)) << 4;
   /* Swap bits 1 and 3 to line up with original color remap (+1) */
   int fgbits = (8 & fg) | ((1 & fg) << 2) | (2 & fg) | ((4 & fg) >> 2);
   return (bgbits | fgbits) + 1;
