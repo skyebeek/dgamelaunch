@@ -633,8 +633,30 @@ int remap_attr_string(char *s)
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
     {
-      int num = atoi(s);
-      if (num >= 0 && num <= 129)
+      char *num_delimiter;
+      int num;
+      int other_num;
+
+      if ((num_delimiter = strchr(s, ',')))
+      {
+        *num_delimiter = '\0';
+        num = atoi(s);
+        s = num_delimiter + 1;
+        other_num = atoi(s);
+
+        if (other_num >= 0 && other_num <= 7)
+        {
+          // If there's a valid background color, set that, overriding whatever
+          // came from the first number (but leaving the foreground in place)
+          num &= 15;
+          num |= other_num << 4;
+        }
+
+      }
+      else // no ',' delimiter
+        num = atoi(s);
+
+      if (num >= -1 && num <= 128)
         attr |= COLOR_PAIR(num+1);
     }
     break;
@@ -666,7 +688,7 @@ int remap_attr_string(char *s)
 void drawbanner(struct dg_banner *ban)
 {
   unsigned int i;
-  char *edit_cursor, *special_end, *next_delimiter;
+  char *edit_cursor, *second_cursor, *next_delimiter;
   int attr = 0, oattr = 0;
 
   if (!ban)
@@ -681,53 +703,47 @@ void drawbanner(struct dg_banner *ban)
     do
     { // while (line_incomplete)
       line_incomplete = 0;
-      if ((edit_cursor = strstr(output_cursor, "$ATTR(")))
+      if (!(edit_cursor = strstr(output_cursor, "$ATTR(")))
       {
-        if ((special_end = strstr(edit_cursor, ")")))
-        {
-          int delimited = 0;
-          char *next_attr_char;
-          line_incomplete = 1;
-          oattr = attr;
-          attr = A_NORMAL;
-          *edit_cursor = *special_end = '\0';
-          edit_cursor += 6;
-          next_attr_char = edit_cursor;
-          do // while(delimited)
-          {
-            delimited = 0;
-            next_delimiter = strchr(edit_cursor, ';');
-            if (next_delimiter && *next_delimiter)
-            {
-              delimited = 1;
-              next_attr_char = next_delimiter;
-              *next_attr_char = '\0';
-              next_attr_char++;
-            }
-            attr |= remap_attr_string(edit_cursor);
-            edit_cursor = next_attr_char;
-          } while (delimited);
-
-          mvaddstr(1 + i, x, output_cursor);
-          if (oattr)
-            attroff(oattr);
-          if (attr)
-            attron(attr);
-          x += strlen(output_cursor);
-          special_end++;
-          output_cursor = special_end;
-        }
-        else
-          mvaddstr(1 + i, x, output_cursor);
-      }
-      else
         mvaddstr(1 + i, x, output_cursor);
-//      elif ((edit_cursor = strstr(output_cursor, "$ATT2(")))
-//      {
-//        if ((special_end = strstr(edit_cursor, ")")))
-//        {
-//        }
-//      }
+        break;
+      }
+      if (!(second_cursor = strstr(edit_cursor, ")")))
+      {
+        mvaddstr(1 + i, x, output_cursor);
+        break;
+      }
+      int delimited = 0;
+      char *next_attr_char;
+      line_incomplete = 1;
+      oattr = attr;
+      attr = A_NORMAL;
+      *edit_cursor = *second_cursor = '\0';
+      edit_cursor += 6;
+      next_attr_char = edit_cursor;
+      do // while(delimited)
+      {
+        delimited = 0;
+        next_delimiter = strchr(edit_cursor, ';');
+        if (next_delimiter && *next_delimiter)
+        {
+          delimited = 1;
+          next_attr_char = next_delimiter;
+          *next_attr_char = '\0';
+          next_attr_char++;
+        }
+        attr |= remap_attr_string(edit_cursor);
+        edit_cursor = next_attr_char;
+      } while (delimited);
+
+      mvaddstr(1 + i, x, output_cursor);
+      if (oattr)
+        attroff(oattr);
+      if (attr)
+        attron(attr);
+      x += strlen(output_cursor);
+      second_cursor++;
+      output_cursor = second_cursor;
     } while (line_incomplete);
     free(banner_line);
   }
@@ -1925,7 +1941,9 @@ initcurses ()
   clear();
   refresh();
 }
+/* ************************************************************* */
 
+#ifdef USE_NCURSES_COLOR
 int color_pair_idx(int fg, int bg)
 {
   int bgbits = (((1 & bg) << 2) | (2 & bg) | ((4 & bg) >> 2)) << 4;
@@ -1933,7 +1951,7 @@ int color_pair_idx(int fg, int bg)
   int fgbits = (8 & fg) | ((1 & fg) << 2) | (2 & fg) | ((4 & fg) >> 2);
   return (bgbits | fgbits) + 1;
 }
-
+#endif
 /* ************************************************************* */
 
 void
