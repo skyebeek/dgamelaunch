@@ -614,7 +614,7 @@ loadbanner (char *fname, struct dg_banner *ban) {
 
     memset (buf, 0, DGL_BANNER_LINELEN);
 
-    if (ban->len >= win.ws_row - 3)
+    if (ban->len >= win.ws_row)
       break;
   }
 
@@ -624,64 +624,77 @@ loadbanner (char *fname, struct dg_banner *ban) {
 int remap_attr_string(char *s)
 {
   int attr = 0;
-  if (s && *s)
+  if ( !(s && *s) )
   {
-    switch (*s)
-    {
-    default:
-      break;
-    case '0': case '1': case '2': case '3': case '4':
-    case '5': case '6': case '7': case '8': case '9':
-    {
-      char *num_delimiter;
-      int num;
-      int other_num;
-
-      if ((num_delimiter = strchr(s, ',')))
-      {
-        *num_delimiter = '\0';
-        num = atoi(s);
-        s = num_delimiter + 1;
-        other_num = atoi(s);
-
-        if (other_num >= 0 && other_num <= 7)
-        {
-          // If there's a valid background color, set that, overriding whatever
-          // came from the first number (but leaving the foreground in place)
-          num &= 15;
-          num |= other_num << 4;
-        }
-
-      }
-      else // no ',' delimiter
-        num = atoi(s);
-
-      if (num >= -1 && num <= 128)
-        attr |= COLOR_PAIR(num+1);
-    }
-    break;
-    case 'b':
-      attr |= A_BOLD;
-      break;
-    case 's':
-      attr |= A_STANDOUT;
-      break;
-    case 'u':
-      attr |= A_UNDERLINE;
-      break;
-    case 'r':
-      attr |= A_REVERSE;
-      break;
-    case 'd':
-      attr |= A_DIM;
-      break;
-    case 'f':
-      attr |= A_BLINK;
-      break;
-    }
-  }
-  else
     attr = A_NORMAL;
+    return attr;
+  }
+  switch (*s)
+  {
+  default:
+    break;
+  case '0': case '1': case '2': case '3': case '4':
+  case '5': case '6': case '7': case '8': case '9':
+  case '-':
+  {
+    char *num_delimiter;
+    int num;
+    int other_num;
+    int offset = 1;
+
+    if ((num_delimiter = strchr(s, ',')))
+    {
+      *num_delimiter = '\0';
+      num_delimiter++;
+      other_num = atoi(num_delimiter);
+    }
+    num = atoi(s);
+
+    if (other_num < 0 && num >= 0)
+    {
+      other_num = 0;
+      offset += 129;
+    }
+    else if (num < 0 && other_num >= 0)
+    {
+      num = other_num;
+      other_num = 0;
+      offset += 145;
+    }
+    else if (num < 0 && other_num < 0)
+    {
+      num = 0;
+      other_num = 0;
+      offset = 0;
+    }
+
+    num &= 15;
+    other_num &= 7;
+    num |= other_num << 4;
+
+    if ((num + offset) >= 0 && (num + offset) <= 151)
+      attr |= COLOR_PAIR(num+offset);
+  }
+  break;
+  case 'b':
+    attr |= A_BOLD;
+    break;
+  case 's':
+    attr |= A_STANDOUT;
+    break;
+  case 'u':
+    attr |= A_UNDERLINE;
+    break;
+  case 'r':
+    attr |= A_REVERSE;
+    break;
+  case 'd':
+    attr |= A_DIM;
+    break;
+  case 'f':
+    attr |= A_BLINK;
+    break;
+  }
   return attr;
 }
 
@@ -1926,15 +1939,26 @@ initcurses ()
   start_color();
   use_default_colors();
 
-  init_pair(0, COLOR_WHITE, COLOR_BLACK);
-  init_pair(129, -1, -1);
-  /* color_pair_idx(0, 0) = 1; color_pair_idx(15, 7) = 128*/
+  /* default = 0;
+     color_pair_idx(0, 0) = 1;
+     color_pair_idx(15, 7) = 128;
+  */
   for (i = 0; i <= 15; i++)
   {
     for (j = 0; j <= 7; j++)
     {
       init_pair(color_pair_idx(i, j), i, j);
     }
+  }
+  // fg on default bg = 129-144
+  for (i = 0; i <= 15; i++)
+  {
+    init_pair(color_pair_idx(i, 0)+129, i, -1);
+  }
+  // default fg on bg = 145-152
+  for (j = 0; j <= 7; j++)
+  {
+    init_pair(color_pair_idx(j, 0)+145, -1, j);
   }
   if (globalconfig.utf8esc) (void) write(1, "\033%G", 3);
 #endif
