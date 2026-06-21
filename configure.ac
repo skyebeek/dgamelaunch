@@ -1,9 +1,9 @@
-dnl Use autoconf 2.72
+dnl Use autoconf 2.71
 dnl (Things tend to break across versions, they're neither upwards nor
 dnl downward compatible. Blame GNU.)
 
 AC_INIT([dgamelaunch],[m4_translit(m4_esyscmd([git describe --abbrev=4 --dirty --tags --always || echo 1.6.1-roc]),m4_newline)])
-AC_PREREQ([2.72])
+AC_PREREQ([2.71])
 
 AC_CONFIG_HEADERS([config.h])
 
