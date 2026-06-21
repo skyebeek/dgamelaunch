@@ -768,7 +768,7 @@ populate_games (int xgame, int *l, struct dg_user *me)
   DIR *pdir;
   struct dirent *pdirent;
   struct stat pstat;
-  char fullname[130], ttyrecname[130], pidws[80], playername[DGL_PLAYERNAMELEN+1];
+  char fullname[512], ttyrecname[130], pidws[80], playername[DGL_PLAYERNAMELEN+1];
   char *replacestr, *dir, *p;
   struct dg_game **games = NULL;
   struct flock fl = { 0 };
@@ -803,7 +803,7 @@ populate_games (int xgame, int *l, struct dg_user *me)
 
       if (!inprog) continue;
 
-      snprintf (fullname, 130, "%s%s", inprog, pdirent->d_name);
+      snprintf (fullname, 512, "%s%s", inprog, pdirent->d_name);
       free(inprog);
 
       fd = 0;

@@ -548,9 +548,9 @@ banner_addline(struct dg_banner *ban, char *line)
     ban->lines = realloc (ban->lines, sizeof (char *) * ban->len);
     if (len >= DGL_BANNER_LINELEN) {
 	len = DGL_BANNER_LINELEN;
-	ban->lines[ban->len - 1] = malloc(len);
+	ban->lines[ban->len - 1] = malloc(len+1);
 	strncpy(ban->lines[ban->len - 1], line, len);
-	ban->lines[ban->len - 1][len-1] = '\0';
+	ban->lines[ban->len - 1][len+1] = '\0';
     } else
 	ban->lines[ban->len - 1] = strdup(line);
 }
@@ -585,8 +585,8 @@ loadbanner (char *fname, struct dg_banner *ban) {
     if ((slen > 0) && (buf[slen-1] == '\n'))
       buf[slen-1] = '\0';
 
-    strncpy(bufnew, buf, DGL_BANNER_LINELEN);
-    if ( inclpos = strstr(bufnew, "$INCLUDE(") ) {
+    strncpy(bufnew, buf, DGL_BANNER_LINELEN+1);
+    if ( (inclpos = strstr(bufnew, "$INCLUDE(")) ) {
       char *fn = inclpos + 9;
       char *fn_end = strchr(fn, ')');
       if (fn_end) {
@@ -827,7 +827,7 @@ shm_update(struct dg_shm *shm_dg_data, struct dg_game **games, int len)
 			games[i]->is_in_shm = 1;
 			games[i]->shm_idx = di;
 			shm_dg_data->cur_n_games++;
-			strncpy(shm_dg_game[di].ttyrec_fn, games[i]->ttyrec_fn, 150);
+			strncpy(shm_dg_game[di].ttyrec_fn, games[i]->ttyrec_fn, 149);
 			break;
 		    }
 	    }
@@ -1036,7 +1036,7 @@ get_timediff(time_t ctime, long seconds)
     mins = (secs / 60) % 60;
     secs -= (mins*60);
     if (hours)
-	snprintf(data, 10, "%ldh %ldm", hours, mins);
+	snprintf(data, 24, "%ldh %ldm", hours, mins);
     else if (mins)
 	snprintf(data, 10, "%ldm %lds", mins, secs);
     else if (secs > 4)
@@ -2991,7 +2991,7 @@ runmenuloop(struct dg_menu *menu)
 	}
 	drawbanner(&ban);
 	if (menu->cursor_x >= 0 && menu->cursor_y >= 0)
-	    mvprintw(menu->cursor_y, menu->cursor_x, "");
+	    mvaddstr(menu->cursor_y, menu->cursor_x, "");
 	refresh();
 	userchoice = dgl_getch();
 	if (userchoice == ERR) {
