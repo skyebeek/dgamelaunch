@@ -648,6 +648,10 @@ int remap_attr_string(char *s)
       num_delimiter++;
       other_num = atoi(num_delimiter);
     }
+    else
+    {
+      other_num = -1;
+    }
     num = atoi(s);
 
     if (other_num < 0 && num >= 0)
