@@ -1,19 +1,36 @@
-1.6.1-roc (2026)
+1.6.1-roc (June-July 2026)
+    * Banner (Menu) Files
+	  * Under the hood, there are now 152 color pairs.
+	  * $ATTR(7) now sets white on black, instead of the user's terminal
+	    emulator's default colors. (unintended side-effect of commit bf205)
+	  * $ATTR() now accepts/turns on "blink" attribute, using character 'f'
+	    for flash (since b was already taken by bold).
+	  * Fixed lingering error in original and 1.6.1-roc dgamelaunch.conf,
+            which incorrectly instructed users to use ':' rather than ';' as a
+            delimiter in $ATTR() replacements.
+	  * $ATTR() now, in addition to taking a single number, will take two
+	    comma-separated numbers to represent a Foreground and a Background.
+            New signature: $ATTR([0-15][,0-7][;(attr-char)])
+	  * ATTR() color codes can be -1, for either (or both) foreground or
+            background, which will cause the displayed color to be the default
+            for the user's terminal emulator.
+          * ATTR() color codes, if no bg is given, now default to user term
+            default. So users with black-on-white for some reason won't see
+            messy blobs of black backgrounds.
+1.6.1-roc (June 2026)
 	* Banner (Menu) Files
 	  * Changed loadbanner() [dgamelaunch.c] -- $INCLUDE() can now be
 	    anywhere in a line.
 	  * $VERSION now replaced with PACKAGE_VERSION instead of
-	    PACKAGE_STRING
+	    PACKAGE_STRING.
 	  * Banner files can be longer than 24 lines, if the window size is
 	    long enough.
 	* Meta
 	  * Self-reported version now includes git tag and/or commit hash.
 	  * Forked noisytoot repository and merged changes in paxed's repo
 	    since last merge.
-
-
-        * Merged "crawl-specific" character handling from crawl repo (maybe it
-          will be useful for older versions of DCSS?)
+      * Merged "crawl-specific" character handling from crawl repo (maybe it
+        will be useful for older versions of DCSS?)
 
 1.6.0-hdf (2024 - noisytoot fork, recorded here 2026 by skyebee)
 	* Fixed various buildtime warnings in ee, and minor errors in autoconf

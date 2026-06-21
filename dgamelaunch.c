@@ -135,25 +135,6 @@ static struct dg_watchcols default_watchcols[] = {
 #endif
 };
 
-int color_remap[16] = {
-    COLOR_PAIR(9) | A_NORMAL,
-    COLOR_PAIR(COLOR_BLUE) | A_NORMAL,
-    COLOR_PAIR(COLOR_GREEN) | A_NORMAL,
-    COLOR_PAIR(COLOR_CYAN) | A_NORMAL,
-    COLOR_PAIR(COLOR_RED) | A_NORMAL,
-    COLOR_PAIR(COLOR_MAGENTA) | A_NORMAL,
-    COLOR_PAIR(COLOR_YELLOW) | A_NORMAL,
-    COLOR_PAIR(COLOR_BLACK) | A_NORMAL,
-    COLOR_PAIR(10) | A_BOLD,
-    COLOR_PAIR(COLOR_BLUE) | A_BOLD,
-    COLOR_PAIR(COLOR_GREEN) | A_BOLD,
-    COLOR_PAIR(COLOR_CYAN) | A_BOLD,
-    COLOR_PAIR(COLOR_RED) | A_BOLD,
-    COLOR_PAIR(COLOR_MAGENTA) | A_BOLD,
-    COLOR_PAIR(COLOR_YELLOW) | A_BOLD,
-    COLOR_PAIR(COLOR_WHITE) | A_BOLD,
-};
-
 static struct dg_watchcols *default_watchcols_list[DGL_MAXWATCHCOLS + 1];
 
 struct dg_user *
@@ -633,81 +614,155 @@ loadbanner (char *fname, struct dg_banner *ban) {
 
     memset (buf, 0, DGL_BANNER_LINELEN);
 
-    if (ban->len >= win.ws_row - 3)
+    if (ban->len >= win.ws_row)
       break;
   }
 
   fclose (bannerfile);
 }
 
-void
-drawbanner (struct dg_banner *ban)
+int remap_attr_string(char *s)
+{
+  int attr = 0;
+  if ( !(s && *s) )
+  {
+    attr = A_NORMAL;
+    return attr;
+  }
+  switch (*s)
+  {
+  default:
+    break;
+  case '0': case '1': case '2': case '3': case '4':
+  case '5': case '6': case '7': case '8': case '9':
+  case '-':
+  {
+    char *num_delimiter;
+    int num;
+    int other_num;
+    int offset = 1;
+
+    if ((num_delimiter = strchr(s, ',')))
+    {
+      *num_delimiter = '\0';
+      num_delimiter++;
+      other_num = atoi(num_delimiter);
+    }
+    else
+    {
+      other_num = -1;
+    }
+    num = atoi(s);
+
+    if (other_num < 0 && num >= 0)
+    {
+      other_num = 0;
+      offset += 129;
+    }
+    else if (num < 0 && other_num >= 0)
+    {
+      num = other_num;
+      other_num = 0;
+      offset += 145;
+    }
+    else if (num < 0 && other_num < 0)
+    {
+      num = 0;
+      other_num = 0;
+      offset = 0;
+    }
+
+    num &= 15;
+    other_num &= 7;
+    num |= other_num << 4;
+
+    if ((num + offset) >= 0 && (num + offset) <= 151)
+      attr |= COLOR_PAIR(num+offset);
+  }
+  break;
+  case 'b':
+    attr |= A_BOLD;
+    break;
+  case 's':
+    attr |= A_STANDOUT;
+    break;
+  case 'u':
+    attr |= A_UNDERLINE;
+    break;
+  case 'r':
+    attr |= A_REVERSE;
+    break;
+  case 'd':
+    attr |= A_DIM;
+    break;
+  case 'f':
+    attr |= A_BLINK;
+    break;
+  }
+  return attr;
+}
+
+void drawbanner(struct dg_banner *ban)
 {
   unsigned int i;
-  char *tmpch, *tmpch2, *splch;
+  char *edit_cursor, *second_cursor, *next_delimiter;
   int attr = 0, oattr = 0;
 
-  if (!ban) return;
+  if (!ban)
+    return;
 
-  for (i = 0; i < ban->len; i++) {
-      char *tmpbuf = strdup(ban->lines[i]);
-      char *tmpbuf2 = tmpbuf;
-      int ok = 0;
-      int x = 1;
-      do {
-	  ok = 0;
-	  if ((tmpch = strstr(tmpbuf2, "$ATTR("))) {
-	      if ((tmpch2 = strstr(tmpch, ")"))) {
-		  int spl = 0;
-		  char *nxttmpch;
-		  ok = 1;
-		  oattr = attr;
-		  attr = A_NORMAL;
-		  *tmpch = *tmpch2 = '\0';
-		  tmpch += 6;
-		  nxttmpch = tmpch;
-		  do {
-		      spl = 0;
-		      splch = strchr(tmpch, ';');
-		      if (splch && *splch) {
-			  spl = 1;
-			  nxttmpch = splch;
-			  *nxttmpch = '\0';
-			  nxttmpch++;
-		      }
-		      if (tmpch && *tmpch) {
-			  switch (*tmpch) {
-			  default: break;
-			  case '0': case '1': case '2': case '3': case '4':
-			  case '5': case '6': case '7': case '8': case '9':
-			      {
-				  int num = atoi(tmpch);
-				  if (num >= 0 && num <= 15)
-				      attr |= color_remap[num];
-			      }
-			      break;
-			  case 'b': attr |= A_BOLD; break;
-			  case 's': attr |= A_STANDOUT; break;
-			  case 'u': attr |= A_UNDERLINE; break;
-			  case 'r': attr |= A_REVERSE; break;
-			  case 'd': attr |= A_DIM; break;
-			  }
-		      } else attr = A_NORMAL;
-		      tmpch = nxttmpch;
-		  } while (spl);
+  for (i = 0; i < ban->len; i++)
+  {
+    char *banner_line = strdup(ban->lines[i]);
+    char *output_cursor = banner_line;
+    int line_incomplete = 0;
+    int x = 1;
+    do
+    { // while (line_incomplete)
+      line_incomplete = 0;
+      if (!(edit_cursor = strstr(output_cursor, "$ATTR(")))
+      {
+        mvaddstr(1 + i, x, output_cursor);
+        break;
+      }
+      if (!(second_cursor = strstr(edit_cursor, ")")))
+      {
+        mvaddstr(1 + i, x, output_cursor);
+        break;
+      }
+      int delimited = 0;
+      char *next_attr_char;
+      line_incomplete = 1;
+      oattr = attr;
+      attr = A_NORMAL;
+      *edit_cursor = *second_cursor = '\0';
+      edit_cursor += 6;
+      next_attr_char = edit_cursor;
+      do // while(delimited)
+      {
+        delimited = 0;
+        next_delimiter = strchr(edit_cursor, ';');
+        if (next_delimiter && *next_delimiter)
+        {
+          delimited = 1;
+          next_attr_char = next_delimiter;
+          *next_attr_char = '\0';
+          next_attr_char++;
+        }
+        attr |= remap_attr_string(edit_cursor);
+        edit_cursor = next_attr_char;
+      } while (delimited);
 
-		  mvaddstr(1 + i, x, tmpbuf2);
-		  if (oattr) attroff(oattr);
-		  if (attr) attron(attr);
-		  x += strlen(tmpbuf2);
-		  tmpch2++;
-		  tmpbuf2 = tmpch2;
-	      } else
-		  mvaddstr (1 + i, x, tmpbuf2);
-	  } else
-	      mvaddstr (1 + i, x, tmpbuf2);
-      } while (ok);
-      free(tmpbuf);
+      mvaddstr(1 + i, x, output_cursor);
+      if (oattr)
+        attroff(oattr);
+      if (attr)
+        attron(attr);
+      x += strlen(output_cursor);
+      second_cursor++;
+      output_cursor = second_cursor;
+    } while (line_incomplete);
+    free(banner_line);
   }
 }
 
@@ -1870,6 +1925,7 @@ freefile ()
 void
 initcurses ()
 {
+  int i, j;
   printf("\033[2J");
   if (newterm(NULL, stdout, stdin) == NULL) {
       if (!globalconfig.defterm || (newterm(globalconfig.defterm, stdout, stdin) == NULL)) {
@@ -1887,24 +1943,43 @@ initcurses ()
   start_color();
   use_default_colors();
 
-  init_pair(COLOR_BLACK, COLOR_WHITE, COLOR_BLACK);
-  init_pair(COLOR_RED, COLOR_RED, COLOR_BLACK);
-  init_pair(COLOR_GREEN, COLOR_GREEN, COLOR_BLACK);
-  init_pair(COLOR_YELLOW, COLOR_YELLOW, COLOR_BLACK);
-  init_pair(COLOR_BLUE, COLOR_BLUE, COLOR_BLACK);
-  init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
-  init_pair(COLOR_CYAN, COLOR_CYAN, COLOR_BLACK);
-  init_pair(COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
-  init_pair(9, 0, COLOR_BLACK);
-  init_pair(10, COLOR_BLACK, COLOR_BLACK);
-  init_pair(11, -1, -1);
-
+  /* default = 0;
+     color_pair_idx(0, 0) = 1;
+     color_pair_idx(15, 7) = 128;
+  */
+  for (i = 0; i <= 15; i++)
+  {
+    for (j = 0; j <= 7; j++)
+    {
+      init_pair(color_pair_idx(i, j), i, j);
+    }
+  }
+  // fg on default bg = 129-144
+  for (i = 0; i <= 15; i++)
+  {
+    init_pair(color_pair_idx(i, 0)+129, i, -1);
+  }
+  // default fg on bg = 145-152
+  for (j = 0; j <= 7; j++)
+  {
+    init_pair(color_pair_idx(j, 0)+145, -1, j);
+  }
   if (globalconfig.utf8esc) (void) write(1, "\033%G", 3);
 #endif
   clear();
   refresh();
 }
+/* ************************************************************* */
 
+#ifdef USE_NCURSES_COLOR
+int color_pair_idx(int fg, int bg)
+{
+  int bgbits = (((1 & bg) << 2) | (2 & bg) | ((4 & bg) >> 2)) << 4;
+  /* Swap bits 1 and 3 to line up with original color remap (+1) */
+  int fgbits = (8 & fg) | ((1 & fg) << 2) | (2 & fg) | ((4 & fg) >> 2);
+  return (bgbits | fgbits) + 1;
+}
+#endif
 /* ************************************************************* */
 
 void
