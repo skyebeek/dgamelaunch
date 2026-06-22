@@ -28,7 +28,7 @@
 #define DGL_BANNER_LINELEN 256 /* max. length of banner lines*/
 
 #ifdef USE_NCURSES_COLOR
-# define CLR_NORMAL  COLOR_PAIR(129)   | A_NORMAL
+# define CLR_NORMAL  COLOR_PAIR(0)   | A_NORMAL
 # define CLR_RED     COLOR_PAIR(5)   | A_NORMAL
 # define CLR_GREEN   COLOR_PAIR(3) | A_NORMAL
 #else

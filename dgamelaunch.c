@@ -1227,6 +1227,7 @@ inprogressmenu (int gameid)
 	      if (hilite) attron(hilite);
 	      mvprintw(top_banner_hei + 1 + i, col->x, col->fmt, tmpbuf);
 	      if (hilite) {
+                  attroff(hilite);
 		  attron(CLR_NORMAL);
 		  hilite = 0;
 	      }
